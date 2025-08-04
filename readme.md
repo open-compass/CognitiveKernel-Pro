@@ -292,3 +292,7 @@ python convert_sft.py --input_file /path/to/trajectory.output.jsonl --output_fil
       url={https://arxiv.org/abs/2508.00414}, 
 }
 ```
+
+#### Contact
+
+tianqfang(at)tencent(dot)com
