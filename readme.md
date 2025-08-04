@@ -181,7 +181,7 @@ python -u -m ck_pro.ck_main.main --updates "${MAIN_ARGS}" --inference-time-evalu
 
 ### Saved Data Format
 
-目前数据格式如下：
+The format of saved data is as followed:
 - The class of `Session` is used to save trajectories [session.py](ck_pro/agents/session.py)
 - The analysis script could help understand the data structure [analyze.py](ck_pro/ck_main/scripts/analyze.py)
 ```python
@@ -237,6 +237,8 @@ Check out [detailed notes](ck_pro/readme.md) for more details.
 
 The queries and answers of Multi-hop URLQA and AgentWebQA is [here](https://huggingface.co/datasets/CognitiveKernel/CognitiveKernel-Pro-Query). The full SFT data is coming soon.
 
+We release the checkpoint of fine-tuned Qwen3-8B-CK-Pro [here](https://huggingface.co/CognitiveKernel/Qwen3-8B-CK-Pro).
+
 ### Trajectory sampling
 
 We use `gpt-4.1` to sample trajectories. You need to download the queries first and then run the main agent execution code that is similar to previous sections. You may add additional arguments `--sampling-mode --evaluation-method llm_score --max_retry_num 3` to sample the same query up to 3 times until it is successful. 
@@ -280,7 +282,7 @@ python convert_sft.py --input_file /path/to/trajectory.output.jsonl --output_fil
 ## Cite this work
 
 ```
-@misc{fang2025cognitivekernelproframeworkdeep,
+@misc{fang2025cognitivekernelpro,
       title={Cognitive Kernel-Pro: A Framework for Deep Research Agents and Agent Foundation Models Training}, 
       author={Tianqing Fang and Zhisong Zhang and Xiaoyang Wang and Rui Wang and Can Qin and Yuxuan Wan and Jun-Yu Ma and Ce Zhang and Jiaqi Chen and Xiyun Li and Hongming Zhang and Haitao Mi and Dong Yu},
       year={2025},
