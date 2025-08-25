@@ -3,7 +3,7 @@
 
 
 
-[![arXiv](https://img.shields.io/badge/arXiv-2508.00414-b31b1b.svg)](https://arxiv.org/abs/2508.00414) [![Data](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-CognitiveKernel--Pro--Data-ffc107?color=ffc107&logoColor=white)](https://huggingface.co/datasets/CognitiveKernel/CognitiveKernel-Pro-Query) [![Model](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-CognitiveKernel--Pro--Model-ffc107?color=ffc107&logoColor=white)](https://huggingface.co/CognitiveKernel/Qwen3-8B-CK-Pro)
+[![arXiv](https://img.shields.io/badge/arXiv-2508.00414-b31b1b.svg)](https://arxiv.org/abs/2508.00414) [![Data](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-CognitiveKernel--Pro--Data-ffc107?color=ffc107&logoColor=white)](https://huggingface.co/datasets/CognitiveKernel/CognitiveKernel-Pro-Query)  [![Data](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-CognitiveKernel--Pro--SFT-ffc107?color=ffc107&logoColor=white)](https://huggingface.co/datasets/CognitiveKernel/CognitiveKernel-Pro-SFT) [![Model](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-CognitiveKernel--Pro--Model-ffc107?color=ffc107&logoColor=white)](https://huggingface.co/CognitiveKernel/Qwen3-8B-CK-Pro)
 
 <!-- [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)  -->
 
@@ -235,7 +235,7 @@ Check out [detailed notes](ck_pro/readme.md) for more details.
 
 ## Data 
 
-The queries and answers of Multi-hop URLQA and AgentWebQA is [here](https://huggingface.co/datasets/CognitiveKernel/CognitiveKernel-Pro-Query). The full SFT data is coming soon.
+The queries and answers of Multi-hop URLQA and AgentWebQA is [here](https://huggingface.co/datasets/CognitiveKernel/CognitiveKernel-Pro-Query). A portion of the SFT data that is permitted for open-source release due to licensing restrictions is available [here](https://huggingface.co/datasets/CognitiveKernel/CognitiveKernel-Pro-SFT).
 
 We release the checkpoint of fine-tuned Qwen3-8B-CK-Pro [here](https://huggingface.co/CognitiveKernel/Qwen3-8B-CK-Pro).
 
