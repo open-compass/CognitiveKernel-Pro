@@ -279,6 +279,16 @@ Run the code [convert_sft.py](data/convert_sft.py) and choose a type of rejectio
 python convert_sft.py --input_file /path/to/trajectory.output.jsonl --output_file XXX.sft.jsonl
 ```
 
+## Friendly links to relevant agents works from Tencent AI Lab
+
+- [Cognitive Kernel](https://github.com/Tencent/CogKernel) (NAACL 2025 Demo): The base version of Cognitive Kernel-Pro agents.
+- [WebVoyager](https://github.com/MinorJerry/WebVoyager) and [OpenWebVoyager](https://github.com/MinorJerry/OpenWebVoyager/) (ACL 2024 and ACL 2025): Self-improving multimodal agents. 
+- [WebEvolver, WebCoT](https://github.com/Tencent/SelfEvolvingAgent) (EMNLP 2025 Main and Findings): Agents post-training with world model and cognitive behavior injections to CoT. 
+- [Web Agents Rollback](https://arxiv.org/abs/2504.11788): Enhancing Web Agents with Explicit Rollback Mechanisms
+- [DocBench](https://github.com/Anni-Zou/DocBench): Data generation for document agents.
+- [PersonaHub](https://github.com/tencent-ailab/persona-hub): Scaling Synthetic Data Creation with 1,000,000,000 Personas
+- [MobileGUI-RL](https://arxiv.org/abs/2507.05720): MobileGUI-RL: Advancing Mobile GUI Agent through Reinforcement Learning in Online Environment
+
 ## Cite this work
 
 ```
