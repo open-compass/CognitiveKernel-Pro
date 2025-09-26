@@ -102,8 +102,9 @@ class OpenaiHelper:
 
     @staticmethod
     def get_openai_client(model_name="", api_endpoint="", api_key=""):
+        cache_key = (model_name or "", api_endpoint or "", api_key or "")
         model_name_suffix = f"_{model_name}" if model_name else ""
-        if model_name not in OpenaiHelper._openai_clients:  # lazy init
+        if cache_key not in OpenaiHelper._openai_clients:  # lazy init
             import openai
             if GET_ENV_VAR("AZURE_OPENAI_API_KEY", f"AZURE_OPENAI_API_KEY{model_name_suffix}"):
                 client = openai.AzureOpenAI(
@@ -116,14 +117,21 @@ class OpenaiHelper:
                     base_url=GET_ENV_VAR("OPENAI_ENDPOINT", f"OPENAI_ENDPOINT{model_name_suffix}", df=api_endpoint),
                     api_key=GET_ENV_VAR("OPENAI_API_KEY", f"OPENAI_API_KEY{model_name_suffix}", df=api_key),
                 )
-            OpenaiHelper._openai_clients[model_name] = client
-        return OpenaiHelper._openai_clients[model_name]
+            OpenaiHelper._openai_clients[cache_key] = client
+        return OpenaiHelper._openai_clients[cache_key]
 
     @staticmethod
     def call_chat(messages, stat=None, **openai_kwargs):
         rprint(f"Call gpt with openai_kwargs={openai_kwargs}")
-        _client = OpenaiHelper.get_openai_client(openai_kwargs["model"])
-        chat_completion = _client.chat.completions.create(messages=messages, **openai_kwargs)
+        _client = OpenaiHelper.get_openai_client(
+            openai_kwargs.get("model", ""),
+            api_endpoint=openai_kwargs.get("api_base"),
+            api_key=openai_kwargs.get("api_key"),
+        )
+        _kwargs = dict(openai_kwargs)
+        for k in ("api_base", "openai_endpoint", "api_key"):
+            _kwargs.pop(k, None)
+        chat_completion = _client.chat.completions.create(messages=messages, **_kwargs)
         call_return = chat_completion.to_dict()
         update_stat(stat, call_return)
         if "content" not in call_return["choices"][0]["message"]:
@@ -240,7 +248,7 @@ class LLM(KwargsInitializable):
         self.seed = 1377  # zero means no seed!
         # request
         self.request_timeout = 100  # timeout time
-        self.max_token_num = 20000
+        self.max_token_num = 32768
         self.call_kwargs = {"temperature": 0.0, "top_p": 0.95, "max_tokens": 4096}  # other kwargs for gpt/request calling
         # --
         super().__init__(**kwargs)  # init

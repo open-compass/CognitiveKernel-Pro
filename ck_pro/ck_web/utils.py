@@ -92,7 +92,7 @@ class MyMarkdownify(markdownify.MarkdownConverter):
 # an opened web browser
 class WebEnv(KwargsInitializable):
     def __init__(self, starting=True, starting_target_url=None, **kwargs):
-        self.web_ip = os.getenv("WEB_IP", "localhost:3000")  # allow set by ENV
+        self.web_ip = os.getenv("WEB_IP", "localhost:3001")  # allow set by ENV
         self.web_command = ""  # if running a local one
         self.web_timeout = 600  # set a timeout!
         # self.use_screenshot = False  # add screenshot? -> for simplicity, always store it!

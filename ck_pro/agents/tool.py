@@ -100,8 +100,24 @@ class SimpleSearchTool(Tool):
         self.target = target
         if target == "DuckDuckGo":
             self.ddgs_params = kwargs.copy()
+            self.ddgs_text_params = {
+                "region": GET_ENV_VAR("DDG_REGION"),
+                "safesearch": GET_ENV_VAR("DDG_SAFESEARCH"),
+                "timelimit": GET_ENV_VAR("DDG_TIMELIMIT"),
+            }
+            self.ddgs_text_params = {k: v for k, v in self.ddgs_text_params.items() if v}
         elif target == "Google":
             self.google_params = {"key": GET_ENV_VAR("SEARCH_API_KEY"), "cx": GET_ENV_VAR("SEARCH_CSE_ID")}
+        elif target == "SerpAPI":
+            # SerpAPI-based Google Search (no extra dependency required; uses HTTP API)
+            self.serpapi_params = {
+                "api_key": GET_ENV_VAR("SERPAPI_API_KEY"),
+                "engine": GET_ENV_VAR("SERPAPI_ENGINE", df="google"),
+                "hl": GET_ENV_VAR("SERPAPI_HL", df="en"),
+                "gl": GET_ENV_VAR("SERPAPI_GL", df="us"),
+            }
+            # allow overrides via kwargs
+            self.serpapi_params.update({k: v for k, v in kwargs.items() if v is not None})
         else:
             raise ValueError(f"UNK search target = {target}")
         # --
@@ -134,11 +150,15 @@ def simple_web_search(query: str) -> str:
     def __call__(self, query: str):
         target = self.target
         if target == "DuckDuckGo":
-            from duckduckgo_search import DDGS
+            try:
+                from ddgs import DDGS  # new package name
+            except ImportError:
+                from duckduckgo_search import DDGS  # fallback for older installs
+                rprint("Warning: duckduckgo_search is deprecated; please install 'ddgs' (pip install ddgs).")
             ddgs = DDGS(**self.ddgs_params)
-            rprint(f"Query ddgs with: query={query}, max_results={self.max_results}")
-            results = ddgs.text(query, max_results=self.max_results)
-            search_results = [{"title": _item["title"], "link": _item["href"], "content": _item["body"]} for _item in results]
+            rprint(f"Query ddgs with: query={query}, region={self.ddgs_text_params.get('region')}, safesearch={self.ddgs_text_params.get('safesearch')}, timelimit={self.ddgs_text_params.get('timelimit')}, max_results={self.max_results}")
+            results = ddgs.text(query, max_results=self.max_results, **self.ddgs_text_params)
+            search_results = [{"title": _item.get("title"), "link": _item.get("href"), "content": _item.get("body")} for _item in results]
         elif target == "Google":
             url = "https://www.googleapis.com/customsearch/v1"
             params = self.google_params.copy()
@@ -147,6 +167,15 @@ def simple_web_search(query: str) -> str:
             response = requests.get(url, params=params)
             results = response.json()
             search_results = [{"title": _item["title"], "link": _item["link"], "content": _item["snippet"]} for _item in results.get("items", [])]
+        elif target == "SerpAPI":
+            url = "https://serpapi.com/search.json"
+            params = self.serpapi_params.copy()
+            params.update({"q": query, "num": self.max_results})
+            rprint(f"Query serpapi-google with params={{'engine': {params.get('engine')}, 'hl': {params.get('hl')}, 'gl': {params.get('gl')}, 'num': {params.get('num')}}}")
+            response = requests.get(url, params=params)
+            results = response.json()
+            items = results.get("organic_results", []) or results.get("news_results", []) or []
+            search_results = [{"title": _item.get("title", ""), "link": _item.get("link") or _item.get("url", ""), "content": _item.get("snippet") or _item.get("content", "")} for _item in items]
         else:
             raise ValueError(f"UNK search target = {target}")
         # --

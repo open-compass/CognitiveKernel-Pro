@@ -15,7 +15,7 @@ class FileAgent(MultiStepAgent):
             name="file_agent",
             description="A file agent helping to parse and process (a) file(s) to solve a specific task.",
             templates={"plan": "file_plan", "action": "file_action", "end": "file_end"},  # template names
-            max_steps=16,
+            max_steps=10,
         )
         feed_kwargs.update(kwargs)
         self.file_env_kwargs = {}  # kwargs for file env

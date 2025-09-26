@@ -22,7 +22,7 @@
 - Dependency:
 
 ```bash
-pip install boto3 botocore openai duckduckgo_search rich numpy openpyxl biopython mammoth markdownify pandas pdfminer-six python-pptx pdf2image puremagic pydub SpeechRecognition bs4 youtube-transcript-api requests transformers protobuf openai langchain_openai langchain
+pip install boto3 botocore openai ddgs rich numpy openpyxl biopython mammoth markdownify pandas pdfminer-six python-pptx pdf2image puremagic pydub SpeechRecognition bs4 youtube-transcript-api requests transformers protobuf openai langchain_openai langchain
 pip install selenium helium smolagents
 ```
 
@@ -72,7 +72,7 @@ pip install selenium helium smolagents
     "max_steps": 10,  # a maximum of 10 steps for the main agent
     "web_agent": {
         "model": {"call_target": "http://MY_VLLM:8080/v1/chat/completions"},  # use vllm service (replace MY_VLLM with your IP) for the web agent
-        "web_env_kwargs": {"web_ip": "localhost:3000"},  # IP for the web-browser server
+        "web_env_kwargs": {"web_ip": "localhost:3001"},  # IP for the web-browser server
     }
 }
 ``` -->
@@ -126,8 +126,19 @@ VLM_URL=http://xx.xx.xx.xx:8081/v1/chat/completions  # for VLM
 #export SEARCH_BACKEND="Google"
 #export SEARCH_API_KEY="YOUR_API_KEY"
 #export SEARCH_CSE_ID="YOUR_CSE_ID"
+# or use SerpAPI (Google Search via serpapi.com)
+#export SEARCH_BACKEND="SerpAPI"
+#export SERPAPI_API_KEY="YOUR_SERPAPI_KEY"
+# optional: region/language
+#export SERPAPI_ENGINE="google"
+#export SERPAPI_HL="en"   # language
+#export SERPAPI_GL="us"   # country
 # or simply use DuckDuckGo
 export SEARCH_BACKEND="DuckDuckGo"
+# optional DuckDuckGo locale
+#export DDG_REGION="us-en"      # language-region
+#export DDG_SAFESEARCH="moderate"  # off|moderate|strict
+#export DDG_TIMELIMIT=""        # e.g., d,w,m,y (empty for no limit)
 # Step 5: run
 export PYTHONPATH=/your/path/to/CogKernel-Pro/
 #pip install ...  # see above in `Environment`
@@ -255,9 +266,20 @@ export AZURE_OPENAI_ENDPOINT="YOUR_ENDPOINT"
 export AZURE_OPENAI_API_VERSION=2025-01-01-preview
 export MAX_FILE_READ_TOKENS=10000
 export MAX_FILE_SCREENSHOT=5
-export SEARCH_BACKEND=Google
-export SEARCH_API_KEY="YOUR_GOOGLE_KEY"
-export SEARCH_CSE_ID="YOUR_CSE_ID"
+export SEARCH_BACKEND=Google  # or SerpAPI or DuckDuckGo
+export SEARCH_API_KEY="YOUR_GOOGLE_KEY"   # when using Google CSE
+export SEARCH_CSE_ID="YOUR_CSE_ID"        # when using Google CSE
+# For SerpAPI (Google via serpapi.com):
+#export SEARCH_BACKEND=SerpAPI
+#export SERPAPI_API_KEY="YOUR_SERPAPI_KEY"
+#export SERPAPI_ENGINE="google"
+#export SERPAPI_HL="en"
+#export SERPAPI_GL="us"
+# For DuckDuckGo:
+#export SEARCH_BACKEND=DuckDuckGo
+#export DDG_REGION="us-en"
+#export DDG_SAFESEARCH="moderate"
+#export DDG_TIMELIMIT=""
 
 #langchain
 export EVALUATOR_LLM=gpt:gpt-4.1

@@ -20,7 +20,7 @@ default_main_configs = {
     "model": {"call_target": "gpt:gpt-4o-mini"},  # LLM target
     "web_agent": {
         "model": {"call_target": "gpt:gpt-4o-mini"},  # LLM target for the web agent
-        "web_env_kwargs": {"web_ip": "localhost:3000"},  # IP for the web-browser server
+        "web_env_kwargs": {"web_ip": "localhost:3001"},  # IP for the web-browser server
     }
 }
 

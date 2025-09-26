@@ -10,7 +10,7 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 const app = express();
-const port = parseInt(process.env.LISTEN_PORT) || 3000;
+const port = parseInt(process.env.LISTEN_PORT) || 3001;
 
 app.use(express.json());
 

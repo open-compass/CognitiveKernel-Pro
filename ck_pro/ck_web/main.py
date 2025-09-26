@@ -8,7 +8,7 @@ from ..agents.utils import rprint, my_open_with, zwarn, incr_update_dict, get_un
 
 default_web_configs = {
     "model": {"call_target": "gpt:gpt-4o-mini"},  # LLM target
-    # "web_env_kwargs": {"web_ip": "localhost:3000"},  # IP for the web-browser server
+    # "web_env_kwargs": {"web_ip": "localhost:3001"},  # IP for the web-browser server
 }
 
 DEFAULT_START_PAGE = None
@@ -82,19 +82,19 @@ def kill_web():
             print("No running web environment found.")
 
         port_result = subprocess.run(
-            ["lsof", "-t", "-i:3000"],
+            ["lsof", "-t", "-i:3001"],
             capture_output=True,
             text=True
         )
         
         if port_result.returncode == 0:
-            # If the command was successful, we have the PID(s) using port 3000
+            # If the command was successful, we have the PID(s) using port 3001
             port_pids = port_result.stdout.strip().split('\n')
             for port_pid in port_pids:
                 os.kill(int(port_pid), signal.SIGTERM)  # Send SIGTERM to the process
-            print("Process using port 3000 killed successfully.")
+            print("Process using port 3001 killed successfully.")
         else:
-            print("No process found using port 3000.")
+            print("No process found using port 3001.")
     
     except Exception as e:
         print(f"An error occurred while trying to kill the web environment: {e}")

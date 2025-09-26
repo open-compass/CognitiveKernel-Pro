@@ -36,8 +36,8 @@ class CKAgent(MultiStepAgent):
             active_functions=["web_agent", "file_agent", "stop", "ask_llm", "simple_web_search"],  # enable the useful modules
             sub_agent_names=["web_agent", "file_agent"],  # note: another tricky point, use name rather than the objects themselves
             tools=[StopTool(agent=self), self.tool_ask_llm, self.tool_simple_search],  # add related tools
-            max_steps=16,  # still give it more steps
-            max_time_limit=4200,  # 70 minutes
+            max_steps=10,  # still give it more steps
+            max_time_limit=5200,  # 70 minutes
             exec_timeout_with_call=1000,  # if calling sub-agent
             exec_timeout_wo_call=200,  # if not calling sub-agent
         )

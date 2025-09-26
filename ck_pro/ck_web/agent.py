@@ -34,7 +34,7 @@ class WebAgent(MultiStepAgent):
             name="web_agent",
             description="A web agent helping to browse and operate web pages to solve a specific task.",
             templates={"plan": "web_plan", "action": "web_action", "end": "web_end"},  # template names
-            max_steps=16,
+            max_steps=10,
         )
         feed_kwargs.update(kwargs)
         self.web_env_kwargs = {}  # kwargs for web env
