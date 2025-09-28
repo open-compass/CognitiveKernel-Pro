@@ -17,7 +17,6 @@ Repository reference: CognitiveKernel-Pro (upstream): https://github.com/Tencent
 
 - Python: 3.12 recommended
 - Install Python dependencies (FastAPI/Uvicorn + CK-Pro deps)
-<augment_code_snippet mode="EXCERPT">
 ````bash
 pip install fastapi uvicorn
 pip install boto3 botocore openai ddgs rich numpy openpyxl biopython mammoth markdownify pandas pdfminer-six python-pptx pdf2image puremagic pydub SpeechRecognition bs4 youtube-transcript-api requests transformers protobuf openai langchain_openai langchain
@@ -28,7 +27,6 @@ pip install selenium helium smolagents
   - Linux: ck_pro/ck_web/_web/run_local.sh
   - macOS: ck_pro/ck_web/_web/run_local_mac.sh
   - After setup, typical start:
-<augment_code_snippet mode="EXCERPT" path="ck_pro/ck_web/_web/run_local.sh">
 ````bash
 LISTEN_PORT=3001 npm start
 ````
