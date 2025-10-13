@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  agentcompass-service:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: opencompass/cognitivekernel-pro-service:v1.0.0
+    container_name: agentcompass-service
+    ports:
+      - "8080:8080"  # FastAPI service
+      - "3001:3001"  # Playwright web service
+    environment:
+      # Search backend configuration
+      - SEARCH_BACKEND=DuckDuckGo
+      - DDG_REGION=us-en
+      - DDG_SAFESEARCH=moderate
+      - DDG_TIMELIMIT=
+      
+      # Web service configuration
+      - WEB_IP=localhost:3001
+      
+      # Number of Uvicorn workers
+      - WORKERS=4
+      
+      # Optional: OpenAI API configuration
+      # Uncomment and set these if you want to use OpenAI or compatible APIs
+      # - OPENAI_API_KEY=your_api_key_here
+      # - OPENAI_ENDPOINT=https://api.openai.com/v1
+      # - LLM_URL=gpt:gpt-4o-mini
+      
+      # Optional: SerpAPI configuration
+      # - SEARCH_BACKEND=SerpAPI
+      # - SERPAPI_API_KEY=your_serpapi_key
+      # - SERPAPI_ENGINE=google
+      # - SERPAPI_HL=en
+      # - SERPAPI_GL=us
+      
+      # Optional: Google Custom Search
+      # - SEARCH_BACKEND=Google
+      # - SEARCH_API_KEY=your_google_key
+      # - SEARCH_CSE_ID=your_cse_id
+    
+    volumes:
+      # Optional: Mount local .env file to override environment variables
+      # - ../.env:/app/.env:ro
+
+      # Optional: Mount output directory to persist results
+      - ../test_output:/app/test_output
+
+      # Optional: Mount data directory if you have custom datasets
+      # - ../data:/app/data:ro
+    
+    restart: unless-stopped
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # Security options for Playwright
+    security_opt:
+      - seccomp:unconfined
+    
+    # Shared memory size for Chromium
+    shm_size: '2gb'

@@ -1,0 +1,95 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# Logs
+*.log
+_log_*
+
+# Test outputs (keep structure but not old results)
+test_output/*.jsonl
+test_output/*.json
+
+# Node modules (will be installed in container)
+node_modules/
+
+# Cache
+.cache/
+*.cache
+
+# Environment (will use template)
+.env
+
+# Data files (optional - uncomment if you don't want to include data in image)
+# data/
+
+# Downloaded files and screenshots from previous runs
+ck_pro/ck_web/_web/DownloadedFiles/*
+ck_pro/ck_web/_web/screenshots/*
+
+# Keep directory structure
+!ck_pro/ck_web/_web/DownloadedFiles/.gitkeep
+!ck_pro/ck_web/_web/screenshots/.gitkeep
+
+# Documentation
+*.md
+!readme.md
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+

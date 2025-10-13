@@ -109,8 +109,10 @@ def _extract_file_name(payload: dict) -> str:
 
 def _extract_modality(payload: dict) -> str:
     """Extract modality from top-level request only, normalized to lowercase string."""
-    val = payload.get('modality') if isinstance(payload, dict) else 'llm'
-    return val.strip().lower()
+    val = payload.get('modality') if isinstance(payload, dict) else None
+    if isinstance(val, str):
+        return val.strip().lower()
+    return 'llm'
 
 def _resolve_data_file(file_name: str) -> str:
     """Resolve a data file by simply joining with data base directory."""

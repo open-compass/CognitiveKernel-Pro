@@ -17,7 +17,6 @@ Repository reference: CognitiveKernel-Pro (upstream): https://github.com/Tencent
 
 - Python: 3.12 recommended
 - Install Python dependencies (FastAPI/Uvicorn + CK-Pro deps)
-<augment_code_snippet mode="EXCERPT">
 ````bash
 pip install fastapi uvicorn
 pip install boto3 botocore openai ddgs rich numpy openpyxl biopython mammoth markdownify pandas pdfminer-six python-pptx pdf2image puremagic pydub SpeechRecognition bs4 youtube-transcript-api requests transformers protobuf openai langchain_openai langchain
@@ -28,11 +27,9 @@ pip install selenium helium smolagents
   - Linux: ck_pro/ck_web/_web/run_local.sh
   - macOS: ck_pro/ck_web/_web/run_local_mac.sh
   - After setup, typical start:
-<augment_code_snippet mode="EXCERPT" path="ck_pro/ck_web/_web/run_local.sh">
 ````bash
 LISTEN_PORT=3001 npm start
 ````
-
 
 ## 2) Configuration (.env)
 
@@ -60,9 +57,55 @@ Health check:
 curl -s http://localhost:8080/health
 ````
 
-## 4) Upstream project
+## 4) Docker Deployment (Recommended)
+
+The easiest way to run this service is using Docker. The Docker image includes both the FastAPI service and the Playwright web browser service.
+
+### Quick Start with Docker
+
+````bash
+# Pull and run the image (use specific version or latest)
+docker run -d \
+  --name agentcompass-service \
+  -p 8080:8080 \
+  -p 3001:3001 \
+  --shm-size=2g \
+  -e SEARCH_BACKEND=DuckDuckGo \
+  -e WORKERS=4 \
+  opencompass/cognitivekernel-pro-service:v1.0.0
+
+# Check health
+curl http://localhost:8080/health
+````
+
+### Using Docker Compose
+
+````bash
+# Download docker-compose.yml
+wget https://raw.githubusercontent.com/Tencent/CognitiveKernel-Pro/main/docker/docker-compose.yml
+
+# Start service
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+````
+
+### Build Your Own Image
+
+````bash
+# Build locally with version tag
+docker build -t opencompass/cognitivekernel-pro-service:v1.0.0 .
+
+# Or use the automated script (default version: v1.0.0)
+cd docker
+./build-and-push.sh v1.0.0
+````
+
+For detailed Docker deployment instructions, see [docker/README.md](docker/README.md).
+
+## 5) Upstream project
 This service wraps the CKAgent from CognitiveKernel-Pro. For full agent capabilities, training recipes, datasets, and more instructions, see the original repository:
 - CognitiveKernel-Pro: https://github.com/Tencent/CognitiveKernel-Pro
 
 If you use this service in your work, please also cite or reference CognitiveKernel-Pro accordingly.
-
