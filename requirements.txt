@@ -1,0 +1,56 @@
+# Core FastAPI dependencies
+fastapi
+uvicorn
+
+# AWS SDK
+boto3
+botocore
+
+# OpenAI and LLM
+openai
+transformers
+protobuf
+
+# LangChain
+langchain_openai
+langchain
+
+# AI Agents
+smolagents
+
+# Search engines
+ddgs
+
+# Web scraping and automation
+selenium
+helium
+bs4
+requests
+
+# Data processing
+numpy
+pandas
+openpyxl
+
+# Document processing
+pdfminer-six
+python-pptx
+pdf2image
+biopython
+mammoth
+markdownify
+puremagic
+
+# Media processing
+pydub
+SpeechRecognition
+
+# YouTube
+youtube-transcript-api
+
+# Utilities
+rich
+
+# PyTorch CPU version (must be installed separately with --index-url)
+# torch --index-url https://download.pytorch.org/whl/cpu
+

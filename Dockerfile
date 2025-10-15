@@ -70,38 +70,64 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
 # Create app directory
 WORKDIR /app
 
+# Upgrade pip and install build tools
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+
 # Copy Python dependencies installation info from README
-# Install Python dependencies
+# Install Python dependencies in stages to avoid timeout and memory issues
+
+# Stage 1: Install PyTorch CPU version first (largest package)
+# Using official PyTorch CPU index for smaller size
+RUN pip install --no-cache-dir --default-timeout=100 torch --index-url https://download.pytorch.org/whl/cpu
+
+# Stage 2: Install core dependencies
 RUN pip install --no-cache-dir \
     fastapi \
     uvicorn \
     boto3 \
     botocore \
     openai \
-    ddgs \
-    rich \
+    requests
+
+# Stage 3: Install data processing libraries
+RUN pip install --no-cache-dir \
     numpy \
-    openpyxl \
-    biopython \
-    mammoth \
-    markdownify \
     pandas \
+    openpyxl \
     pdfminer-six \
     python-pptx \
     pdf2image \
-    puremagic \
+    puremagic
+
+# Stage 4: Install document and media processing
+RUN pip install --no-cache-dir \
+    biopython \
+    mammoth \
+    markdownify \
     pydub \
-    SpeechRecognition \
+    SpeechRecognition
+
+# Stage 5: Install web scraping and search
+RUN pip install --no-cache-dir \
+    ddgs \
     bs4 \
     youtube-transcript-api \
-    requests \
+    selenium \
+    helium
+
+# Stage 6: Install AI/ML libraries
+RUN pip install --no-cache-dir \
     transformers \
     protobuf \
     langchain_openai \
     langchain \
-    selenium \
-    helium \
     smolagents
+
+# Stage 7: Install utilities
+RUN pip install --no-cache-dir rich
+
+# Pre-download and cache the Qwen tokenizer to avoid download on first run
+RUN python3 -c "from transformers import AutoTokenizer; AutoTokenizer.from_pretrained('Qwen/Qwen3-32B')"
 
 # Copy the entire project
 COPY . /app/
@@ -121,25 +147,9 @@ RUN mkdir -p test_output ck_pro/ck_web/_web/DownloadedFiles ck_pro/ck_web/_web/s
 # 3001 for Playwright web service
 EXPOSE 8080 3001
 
-# Create startup script
-RUN echo '#!/bin/bash\n\
-set -e\n\
-\n\
-# Start the Playwright web service in background\n\
-echo "Starting Playwright web service on port 3001..."\n\
-cd /app/ck_pro/ck_web/_web\n\
-LISTEN_PORT=3001 npm start &\n\
-WEB_PID=$!\n\
-\n\
-# Wait for web service to be ready\n\
-echo "Waiting for web service to start..."\n\
-sleep 5\n\
-\n\
-# Start the FastAPI service\n\
-echo "Starting FastAPI service on port 8080..."\n\
-cd /app\n\
-exec uvicorn agentcompass_service_fastapi:app --host 0.0.0.0 --port 8080 --workers ${WORKERS:-4}\n\
-' > /app/start.sh && chmod +x /app/start.sh
+# Copy startup script
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
 
 # Set environment variables
 ENV PYTHONPATH=/app
@@ -154,4 +164,3 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 
 # Run the startup script
 CMD ["/app/start.sh"]
-

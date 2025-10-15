@@ -41,6 +41,14 @@ Key variables you may want to set:
 - WEB_IP: host:port for the web browser service (default: localhost:3001)
 - Provider keys if using Azure OpenAI or others (see upstream README for details)
 
+### Agent Configuration
+
+All agents in this project are configured with the following default settings:
+- **max_steps**: 10 - Maximum number of steps each agent can take to solve a task
+  - This applies to all agents: CKAgent (main agent), WebAgent, and FileAgent
+  - The actual execution may allow slightly more steps (up to 1.5x) to compensate for error recovery
+  - You can override this at runtime by passing `max_steps` parameter to the agent's `run()` method
+
 
 ## 3) Run the API server
 - Recommended (multiple workers):
