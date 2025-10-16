@@ -147,7 +147,9 @@ app.post('/getBrowser', async (req, res) => {
     let browserEntry = browserPool[availableBrowserslot];
     if (!browserEntry.browser) {
       chromium.use(StealthPlugin())
-      const new_browser = await chromium.launch({
+
+      // Prepare launch options
+      const launchOptions = {
         headless: true,
         chromiumSandbox: false,
         args: [
@@ -155,8 +157,38 @@ app.post('/getBrowser', async (req, res) => {
           '--disable-setuid-sandbox',
           '--disable-dev-shm-usage'
         ]
-      });
+      };
+
+      // Configure proxy if environment variables are set
+      const httpProxy = process.env.HTTP_PROXY || process.env.http_proxy;
+      const httpsProxy = process.env.HTTPS_PROXY || process.env.https_proxy;
+      const proxyServer = httpsProxy || httpProxy;
+
+      if (proxyServer) {
+        console.log('========================================');
+        console.log('🌐 BROWSER PROXY CONFIGURATION');
+        console.log('========================================');
+        console.log(`✓ Proxy Server: ${proxyServer}`);
+        launchOptions.proxy = {
+          server: proxyServer
+        };
+
+        // Add proxy bypass list if specified
+        const noProxy = process.env.NO_PROXY || process.env.no_proxy;
+        if (noProxy) {
+          console.log(`✓ Proxy Bypass: ${noProxy}`);
+          launchOptions.proxy.bypass = noProxy;
+        }
+        console.log('========================================');
+      } else {
+        console.log('⚠️  No proxy configured - direct connection will be used');
+      }
+
+      console.log('🚀 Launching browser with options:', JSON.stringify(launchOptions, null, 2));
+      const new_browser = await chromium.launch(launchOptions);
+      console.log('✓ Browser launched successfully');
       browserEntry.browser = await new_browser.newContext({
+        ignoreHTTPSErrors: true,
         viewport: {width: 1024, height: 768},
         locale: 'en-US',  // Set the locale to English (US)
         geolocation: { latitude: 40.4415, longitude: -80.0125 },  // Coordinates for Pittsburgh, PA, USA
@@ -242,12 +274,31 @@ app.post('/openPage', async (req, res) => {
     });
   };
   try {
+    console.log(`📄 Opening new page for browserId: ${browserId}`);
+    console.log(`🔗 Target URL: ${url}`);
+
+    // Check if proxy is configured
+    const proxyServer = process.env.HTTPS_PROXY || process.env.https_proxy || process.env.HTTP_PROXY || process.env.http_proxy;
+    if (proxyServer) {
+      console.log(`🌐 Using proxy: ${proxyServer}`);
+    } else {
+      console.log(`🌐 Direct connection (no proxy)`);
+    }
+
     const page = await browserEntry.browser.newPage();
     await setCustomUserAgent(page);
-    await page.goto(url);
+
+    console.log(`⏳ Navigating to ${url}...`);
+    const startTime = Date.now();
+    const response = await page.goto(url, { timeout: 60000, waitUntil: 'domcontentloaded' });
+    console.log('HTTP status:', response && response.status());
+    const loadTime = Date.now() - startTime;
+    console.log(`✓ Page loaded successfully in ${loadTime}ms`);
+
     const pageIdint = Object.keys(browserEntry.pages).length;
     console.log(`current page id:${pageIdint}`)
     const pageTitle = await page.title();
+    console.log(`📋 Page title: ${pageTitle}`);
     const pageId = String(pageIdint);
     browserEntry.pages[pageId] = {'pageId': pageId, 'pageTitle': pageTitle, 'page': page, 'downloadedFiles': [], 'downloadSources': []};
     browserEntry.lastActivity = Date.now();
@@ -1031,10 +1082,31 @@ app.post('/getFile', async (req, res) => {
 });
 
 app.listen(port, () => {
-  initializeBrowserPool(maxBrowsers);
-  console.log(`Server listening at http://localhost:${port}`);
-});
+  console.log('========================================');
+  console.log('🚀 Web Server Starting');
+  console.log('========================================');
 
+  // Log proxy configuration
+  const httpProxy = process.env.HTTP_PROXY || process.env.http_proxy;
+  const httpsProxy = process.env.HTTPS_PROXY || process.env.https_proxy;
+  const noProxy = process.env.NO_PROXY || process.env.no_proxy;
+
+  if (httpProxy || httpsProxy) {
+    console.log('📡 Proxy Environment Variables:');
+    if (httpProxy) console.log(`  HTTP_PROXY: ${httpProxy}`);
+    if (httpsProxy) console.log(`  HTTPS_PROXY: ${httpsProxy}`);
+    if (noProxy) console.log(`  NO_PROXY: ${noProxy}`);
+    console.log('✓ Browsers will use proxy configuration');
+  } else {
+    console.log('⚠️  No proxy environment variables detected');
+    console.log('   Browsers will use direct connection');
+  }
+
+  console.log('========================================');
+  initializeBrowserPool(maxBrowsers);
+  console.log(`✓ Server listening at http://localhost:${port}`);
+  console.log('========================================');
+});
 
 process.on('exit', async () => {
   for (const browserEntry of browserPool) {
