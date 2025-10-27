@@ -183,11 +183,33 @@ class WebEnv(KwargsInitializable):
     def open_page(self, browser_id, target_url):
         url = f"http://{self.web_ip}/openPage"
         data = {"browserId": browser_id, "url": target_url}
-        response = requests.post(url, json=data, timeout=self.web_timeout)
-        if response.status_code == 200:
-            return response.json()["pageId"]
-        else:
-            raise requests.RequestException(f"Open page Request failed: {response}")
+        max_retries = 3
+        last_detail = None
+        last_status = None
+        for attempt in range(1, max_retries + 1):
+            response = requests.post(url, json=data, timeout=self.web_timeout)
+            if response.status_code == 200:
+                return response.json()["pageId"]
+            # parse detail for diagnostics
+            detail = None
+            try:
+                detail = response.json()
+            except Exception:
+                try:
+                    detail = response.text
+                except Exception:
+                    detail = None
+            last_detail = detail
+            last_status = response.status_code
+            # retry only on 5xx (server-side) errors
+            if 500 <= response.status_code < 600 and attempt < max_retries:
+                zwarn(f"Open page failed (attempt {attempt}/{max_retries}) with status={response.status_code}, will retry... detail={detail}")
+                time.sleep(2 * attempt)  # simple backoff: 2s, 4s
+                continue
+            # non-5xx or last attempt: raise immediately
+            raise requests.RequestException(f"Open page failed: status={response.status_code}, detail={detail}")
+        # if somehow loop ends without return/raise
+        raise requests.RequestException(f"Open page failed after {max_retries} retries: last_status={last_status}, detail={last_detail}")
 
     def goto_url(self, browser_id, page_id, target_url):
         url = f"http://{self.web_ip}/gotoUrl"

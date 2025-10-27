@@ -166,8 +166,11 @@ def _ck_kwargs_from_llm_config(cfg: dict) -> dict:
 
     return ck_kwargs
 
-def _apply_default_subagents(ck_kwargs: dict) -> dict:
-    """Set sub-agents exactly like example_run_llm.sh MAIN_ARGS."""
+def _apply_default_subagents(ck_kwargs: dict, modality: str) -> dict:
+    """Set sub-agents based on modality and propagate model configs.
+    - If modality == 'llm': force web_agent.use_multimodal = 'off'
+    - If modality == 'vlm': set model_multimodal the same as model for web/file agents
+    """
     if not isinstance(ck_kwargs, dict):
         ck_kwargs = {}
 
@@ -194,14 +197,23 @@ def _apply_default_subagents(ck_kwargs: dict) -> dict:
     if isinstance(_t, int) and _t > 0:
         web_env_kwargs['web_timeout'] = _t
 
+    # Decide multimodal behavior
+    use_mm = 'off' if modality == 'llm' else 'auto'
+
     ck_kwargs['web_agent'] = {
-        'use_multimodal': 'no',
+        'use_multimodal': use_mm,
         'model': web_model,
         'web_env_kwargs': web_env_kwargs,
     }
     ck_kwargs['file_agent'] = {
         'model': file_model,
     }
+
+    # If using VLM, ensure multimodal model shares the same config
+    if modality == 'vlm':
+        ck_kwargs['web_agent']['model_multimodal'] = web_model
+        ck_kwargs['file_agent']['model_multimodal'] = file_model
+
     return ck_kwargs
 
 @app.post("/api/tasks", response_model=TaskResponse)
@@ -216,7 +228,7 @@ async def run_task(request: TaskRequest):
     try:
         # Resolve optional dataset, modality, and file_name
         dataset = _extract_dataset(payload)
-        _ = _extract_modality(payload)
+        modality = _extract_modality(payload)
         file_name = _extract_file_name(payload)
         input_file = ''
         if file_name:
@@ -235,7 +247,7 @@ async def run_task(request: TaskRequest):
         from ck_pro.ck_main.agent import CKAgent
         llm_cfg = payload.get('llm_config')
         ck_kwargs = _ck_kwargs_from_llm_config(llm_cfg)
-        ck_kwargs = _apply_default_subagents(ck_kwargs)
+        ck_kwargs = _apply_default_subagents(ck_kwargs, modality)
 
         agent = CKAgent(**ck_kwargs) if ck_kwargs else CKAgent()
         res = agent.run(task_text)

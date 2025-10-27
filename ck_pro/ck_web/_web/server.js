@@ -155,23 +155,47 @@ app.post('/getBrowser', async (req, res) => {
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage'
+          '--disable-dev-shm-usage',
+          '--ignore-certificate-errors',
+          '--disable-quic'
         ]
       };
 
       // Configure proxy if environment variables are set
       const httpProxy = process.env.HTTP_PROXY || process.env.http_proxy;
       const httpsProxy = process.env.HTTPS_PROXY || process.env.https_proxy;
-      const proxyServer = httpsProxy || httpProxy;
+      const rawProxy = httpsProxy || httpProxy;
 
-      if (proxyServer) {
+      if (rawProxy) {
         console.log('========================================');
         console.log('🌐 BROWSER PROXY CONFIGURATION');
         console.log('========================================');
-        console.log(`✓ Proxy Server: ${proxyServer}`);
-        launchOptions.proxy = {
-          server: proxyServer
-        };
+
+        let serverForPlaywright = rawProxy;
+        let username;
+        let password;
+        try {
+          const u = new URL(rawProxy);
+          if (u.username || u.password) {
+            username = decodeURIComponent(u.username || '');
+            password = decodeURIComponent(u.password || '');
+            serverForPlaywright = `${u.protocol}//${u.hostname}${u.port ? ':' + u.port : ''}`;
+          } else {
+            if (process.env.PROXY_USERNAME) username = process.env.PROXY_USERNAME;
+            if (process.env.PROXY_PASSWORD) password = process.env.PROXY_PASSWORD;
+          }
+        } catch (e) {
+          // Fallback: treat as raw server string
+        }
+
+        console.log(`✓ Proxy Server: ${serverForPlaywright}`);
+        if (username) {
+          console.log(`✓ Proxy Auth: ${username}:${password ? '********' : ''}`);
+        }
+
+        launchOptions.proxy = { server: serverForPlaywright };
+        if (username) launchOptions.proxy.username = username;
+        if (password) launchOptions.proxy.password = password;
 
         // Add proxy bypass list if specified
         const noProxy = process.env.NO_PROXY || process.env.no_proxy;
@@ -280,7 +304,12 @@ app.post('/openPage', async (req, res) => {
     // Check if proxy is configured
     const proxyServer = process.env.HTTPS_PROXY || process.env.https_proxy || process.env.HTTP_PROXY || process.env.http_proxy;
     if (proxyServer) {
-      console.log(`🌐 Using proxy: ${proxyServer}`);
+      let shown = proxyServer;
+      try {
+        const u = new URL(proxyServer);
+        shown = `${u.protocol}//${u.hostname}${u.port ? ':' + u.port : ''}`;
+      } catch {}
+      console.log(`🌐 Using proxy: ${shown}`);
     } else {
       console.log(`🌐 Direct connection (no proxy)`);
     }
@@ -288,12 +317,24 @@ app.post('/openPage', async (req, res) => {
     const page = await browserEntry.browser.newPage();
     await setCustomUserAgent(page);
 
+
     console.log(`⏳ Navigating to ${url}...`);
     const startTime = Date.now();
-    const response = await page.goto(url, { timeout: 60000, waitUntil: 'domcontentloaded' });
-    console.log('HTTP status:', response && response.status());
+    try {
+      const response = await page.goto(url, { timeout: 60000, waitUntil: 'domcontentloaded' });
+      console.log('HTTP status:', response && response.status());
+    } catch (e) {
+      console.error('[NAV FAIL] domcontentloaded', url, e && e.message);
+      return res.status(500).send({ error: 'Navigation failed', stage: 'domcontentloaded', url, details: String((e && e.message) || e) });
+    }
+    try {
+      await page.waitForLoadState('load', { timeout: 60000 });
+    } catch (e) {
+      console.error('[NAV FAIL] load', url, e && e.message);
+      return res.status(500).send({ error: 'Navigation failed', stage: 'load', url, currentUrl: page.url(), details: String((e && e.message) || e) });
+    }
     const loadTime = Date.now() - startTime;
-    console.log(`✓ Page loaded successfully in ${loadTime}ms`);
+    console.log(`✓ Page ready in ${loadTime}ms`);
 
     const pageIdint = Object.keys(browserEntry.pages).length;
     console.log(`current page id:${pageIdint}`)
@@ -302,6 +343,7 @@ app.post('/openPage', async (req, res) => {
     const pageId = String(pageIdint);
     browserEntry.pages[pageId] = {'pageId': pageId, 'pageTitle': pageTitle, 'page': page, 'downloadedFiles': [], 'downloadSources': []};
     browserEntry.lastActivity = Date.now();
+
 
     // Define your download path
     const downloadPath = `./DownloadedFiles/${browserId}`;
@@ -356,8 +398,13 @@ app.post('/openPage', async (req, res) => {
 
     res.send({ browserId, pageId });
   } catch (error) {
-    console.error(error);
-    res.status(500).send({ error: 'Failed to open new page.' });
+    console.error('[openPage error]', error && (error.stack || error.message || String(error)));
+    try {
+      const currentUrl = (typeof page !== 'undefined' && page) ? page.url() : undefined;
+      res.status(500).send({ error: 'Failed to open new page.', message: (error && error.message) || String(error), url: currentUrl });
+    } catch {
+      res.status(500).send({ error: 'Failed to open new page.', message: (error && error.message) || String(error) });
+    }
   }
 });
 
@@ -868,7 +915,7 @@ app.post('/performAction', async (req, res) => {
     }
     switch (actionName) {
       case 'click':
-        let element = treeIdxtoElement[targetId];        
+        let element = treeIdxtoElement[targetId];
         let clicked = false;
         let click_locator;
         try{
@@ -942,12 +989,41 @@ app.post('/performAction', async (req, res) => {
         await page.goBack();
         break;
       case 'goto':
-        // await page.goto("https://www.google.com");
-        await page.goto(actionValue, { timeout: 60000 });
+        {
+          const start = Date.now();
+          try {
+            await page.goto(actionValue, { timeout: 60000, waitUntil: 'domcontentloaded' });
+          } catch (e) {
+            console.error('[NAV FAIL] performAction.goto domcontentloaded', actionValue, e && e.message);
+            return res.status(500).send({ error: 'Navigation failed', stage: 'domcontentloaded', url: actionValue, details: String((e && e.message) || e) });
+          }
+          try {
+            await page.waitForLoadState('load', { timeout: 60000 });
+          } catch (e) {
+            console.error('[NAV FAIL] performAction.goto load', actionValue, e && e.message);
+            return res.status(500).send({ error: 'Navigation failed', stage: 'load', url: actionValue, currentUrl: page.url(), details: String((e && e.message) || e) });
+          }
+          console.log('performAction.goto ready in', Date.now() - start, 'ms');
+        }
         break;
       case 'restart':
-        await page.goto("https://www.bing.com");
-        // await page.goto(actionValue);
+        {
+          const start = Date.now();
+          const restartUrl = "https://www.bing.com";
+          try {
+            await page.goto(restartUrl, { timeout: 60000, waitUntil: 'domcontentloaded' });
+          } catch (e) {
+            console.error('[NAV FAIL] performAction.restart domcontentloaded', restartUrl, e && e.message);
+            return res.status(500).send({ error: 'Navigation failed', stage: 'domcontentloaded', url: restartUrl, details: String((e && e.message) || e) });
+          }
+          try {
+            await page.waitForLoadState('load', { timeout: 60000 });
+          } catch (e) {
+            console.error('[NAV FAIL] performAction.restart load', restartUrl, e && e.message);
+            return res.status(500).send({ error: 'Navigation failed', stage: 'load', url: restartUrl, currentUrl: page.url(), details: String((e && e.message) || e) });
+          }
+          console.log('performAction.restart ready in', Date.now() - start, 'ms');
+        }
         break;
       case 'wait':
         await sleep(3000);
@@ -987,11 +1063,24 @@ app.post('/gotoUrl', async (req, res) => {
   try {
     const page = pageEntry.page;
     console.log(`target url: ${targetUrl}`);
-    await page.goto(targetUrl, { timeout: 60000 });
+    const start = Date.now();
+    try {
+      await page.goto(targetUrl, { timeout: 60000, waitUntil: 'domcontentloaded' });
+    } catch (e) {
+      console.error('[NAV FAIL] /gotoUrl domcontentloaded', targetUrl, e && e.message);
+      return res.status(500).send({ error: 'Navigation failed', stage: 'domcontentloaded', url: targetUrl, details: String((e && e.message) || e) });
+    }
+    try {
+      await page.waitForLoadState('load', { timeout: 60000 });
+    } catch (e) {
+      console.error('[NAV FAIL] /gotoUrl load', targetUrl, e && e.message);
+      return res.status(500).send({ error: 'Navigation failed', stage: 'load', url: targetUrl, currentUrl: page.url(), details: String((e && e.message) || e) });
+    }
     browserEntry.lastActivity = Date.now();
     await sleep(3000);
     const currentUrl = page.url();
     console.log(`current url: ${currentUrl}`);
+    console.log('gotoUrl ready in', Date.now() - start, 'ms');
     res.send({ message: 'Action performed successfully.' });
   } catch (error) {
     console.error(error);
